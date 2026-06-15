@@ -391,18 +391,32 @@ scanBtn.onclick = async () => {
           input.value =
             serial
 
-          // ปิดการสแกน
           barcodeReader.reset()
 
-          // ซ่อนกล่องกล้อง
-          video.style.display =
-            'none'
+// ลบกล่องกล้องออกจากหน้าเว็บ
+video.remove()
 
-          video.style.visibility =
-            'hidden'
+// สร้างกล่องกล้องใหม่ไว้รอรอบหน้า
+video = document.createElement('video')
 
-          // ค้นหาอัตโนมัติ
-          button.click()
+Object.assign(video.style, {
+  position: 'fixed',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: '90%',
+  maxWidth: '400px',
+  border: '2px solid #4f8cff',
+  borderRadius: '10px',
+  backgroundColor: '#000',
+  display: 'none',
+  zIndex: 9999
+})
+
+document.body.appendChild(video)
+
+// ค้นหาอัตโนมัติ
+button.click()
 
         }
 
