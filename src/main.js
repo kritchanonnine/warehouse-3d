@@ -405,7 +405,7 @@ scanBtn.onclick = async () => {
 
   video.style.display = 'none'
   console.log('ปิดกล้องแล้ว')
-  video.style.display = 'block'
+ 
 
   // ค้นหาอัตโนมัติ
   button.click()
