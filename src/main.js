@@ -191,7 +191,7 @@ styleSheet.innerText = `
     border: 1px solid rgba(255,255,255,0.5) !important;
   }
 
-  /* 🎯 ปรับแต่งหน้าต่างกล้อง ให้ชัวร์ว่าอยู่กึ่งกลางเหนือโมเดล */
+  /* หน้าต่างสตรีมวิดีโอกล้องหลักของเรา */
   .video-preview-active {
     position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important;
     width: 85% !important; max-width: 360px !important; aspect-ratio: 4/3 !important; border: 4px solid #4f8cff !important;
@@ -344,19 +344,31 @@ resetBtn.onclick = () => {
 }
 
 // ====================
-// 🎯 ปรับปรุงระบบสแกนบาร์โค้ด (สร้าง/ลบทิ้ง ป้องกันกล่องดำค้าง 100%)
+// 🎯 ปรับปรุงฟังก์ชันหยุดสแกนแบบล้างบาง (ลบแท็กวิดีโอแปลกปลอมทุกชิ้นในเว็บ)
 // ====================
 function stopScanning() {
-  barcodeReader.reset()
+  try {
+    barcodeReader.reset()
+  } catch (e) {
+    console.log("Reader reset soft bypass")
+  }
   
-  // 🎯 ค้นหาแท็กวิดีโอที่สแกนอยู่ทั้งหมดในหน้าจอ แล้วสั่งทำลายทิ้งทันที
-  const activeVideos = document.querySelectorAll('.video-preview-active')
-  activeVideos.forEach(v => {
-    if (v.srcObject) {
-      v.srcObject.getTracks().forEach(track => track.stop())
+  // 1. ค้นหาแท็ก <video> ทุกชิ้นที่หลงเหลืออยู่ในระบบเว็บทั้งหมด (ไม่ว่าจะชื่อคลาสอะไร) แล้วสั่งปิดสตรีมกล้อง
+  const allVideos = document.querySelectorAll('video')
+  allVideos.forEach(v => {
+    try {
+      if (v.srcObject) {
+        v.srcObject.getTracks().forEach(track => track.stop())
+      }
+    } catch (err) {
+      console.error("Error stopping video track:", err)
     }
-    v.remove() // ลบ Element ออกจากเว็บถาวร กล่องดำหายแน่นอน
+    v.remove() // 🎯 ระเบิดทิ้งออกจากหน้าเว็บถาวร
   })
+
+  // 2. ดักสแกนคลาสวิดีโอเก่าที่เคยกำหนดไว้ในเวอร์ชันแรกๆ เพื่อความมั่นใจว่าไม่ตกค้าง
+  const oldPreviews = document.querySelectorAll('.video-preview, .video-preview-active')
+  oldPreviews.forEach(el => el.remove())
 
   scanBtn.innerText = '📷 Scan'
   scanBtn.style.setProperty('background-color', '#28a745', 'important')
@@ -370,11 +382,14 @@ scanBtn.onclick = async () => {
   }
 
   try {
+    // ก่อนเปิดกล้องใหม่ ให้ล้างระบบวิดีโอเก่าๆ ที่อาจจะค้างอยู่ก่อนหน้านี้ให้หมดจด
+    stopScanning()
+
     isScanning = true
     scanBtn.innerText = '🛑 Stop'
     scanBtn.style.setProperty('background-color', '#dc3545', 'important')
 
-    // 🎯 ค่อยสร้างแท็กวิดีโอขึ้นมาใหม่เฉพาะตอนที่เปิดใช้สแกนเท่านั้น
+    // สร้างแท็กวิดีโอของเราขึ้นมาใหม่สดๆ
     const videoEl = document.createElement('video')
     videoEl.className = 'video-preview-active'
     document.body.appendChild(videoEl)
@@ -389,7 +404,7 @@ scanBtn.onclick = async () => {
         console.log('Barcode Scanned:', serial)
         
         input.value = serial
-        stopScanning() // สแกนเจอแล้ว สั่งทำลายกล่องวิดีโอทันที
+        stopScanning() // เจอผลลัพธ์แล้ว สั่งกวาดล้างกล่องวิดีโอทันที
         button.click()
       }
     })
