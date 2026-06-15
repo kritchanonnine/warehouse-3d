@@ -255,18 +255,16 @@ window.addEventListener(
 )
 const video = document.createElement('video')
 
-Object.assign(video.style,{
-
-  position:'fixed',
-  top:'0',
-  left:'0',
-  width:'100%',
-  height:'100%',
-  objectFit:'cover',
-
-  display:'none',
-  zIndex:'9999'
-
+Object.assign(video.style, {
+  position: 'absolute',
+  left: '20px',
+  top: '80px',
+  width: '320px',
+  border: '2px solid #4f8cff',
+  borderRadius: '10px',
+  backgroundColor: '#000',
+  display: 'none',
+  zIndex: 999
 })
 
 document.body.appendChild(video)
