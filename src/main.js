@@ -191,7 +191,7 @@ styleSheet.innerText = `
     border: 1px solid rgba(255,255,255,0.5) !important;
   }
 
-  /* หน้าต่างสตรีมวิดีโอกล้องหลักของเรา */
+  /* หน้าต่างสตรีมวิดีโอกล้อง */
   .video-preview-active {
     position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important;
     width: 85% !important; max-width: 360px !important; aspect-ratio: 4/3 !important; border: 4px solid #4f8cff !important;
@@ -344,7 +344,7 @@ resetBtn.onclick = () => {
 }
 
 // ====================
-// 🎯 ปรับปรุงฟังก์ชันหยุดสแกนแบบล้างบาง (ลบแท็กวิดีโอแปลกปลอมทุกชิ้นในเว็บ)
+// ระบบสแกนบาร์โค้ด และล้างแท็กวิดีโอตกค้าง
 // ====================
 function stopScanning() {
   try {
@@ -353,7 +353,7 @@ function stopScanning() {
     console.log("Reader reset soft bypass")
   }
   
-  // 1. ค้นหาแท็ก <video> ทุกชิ้นที่หลงเหลืออยู่ในระบบเว็บทั้งหมด (ไม่ว่าจะชื่อคลาสอะไร) แล้วสั่งปิดสตรีมกล้อง
+  // ลบและปิดแท็กวิดีโอทั้งหมดที่อยู่ในระบบเว็บเพื่อกันภาพค้าง
   const allVideos = document.querySelectorAll('video')
   allVideos.forEach(v => {
     try {
@@ -363,10 +363,9 @@ function stopScanning() {
     } catch (err) {
       console.error("Error stopping video track:", err)
     }
-    v.remove() // 🎯 ระเบิดทิ้งออกจากหน้าเว็บถาวร
+    v.remove() 
   })
 
-  // 2. ดักสแกนคลาสวิดีโอเก่าที่เคยกำหนดไว้ในเวอร์ชันแรกๆ เพื่อความมั่นใจว่าไม่ตกค้าง
   const oldPreviews = document.querySelectorAll('.video-preview, .video-preview-active')
   oldPreviews.forEach(el => el.remove())
 
@@ -382,14 +381,12 @@ scanBtn.onclick = async () => {
   }
 
   try {
-    // ก่อนเปิดกล้องใหม่ ให้ล้างระบบวิดีโอเก่าๆ ที่อาจจะค้างอยู่ก่อนหน้านี้ให้หมดจด
     stopScanning()
 
     isScanning = true
     scanBtn.innerText = '🛑 Stop'
     scanBtn.style.setProperty('background-color', '#dc3545', 'important')
 
-    // สร้างแท็กวิดีโอของเราขึ้นมาใหม่สดๆ
     const videoEl = document.createElement('video')
     videoEl.className = 'video-preview-active'
     document.body.appendChild(videoEl)
@@ -400,12 +397,21 @@ scanBtn.onclick = async () => {
 
     await barcodeReader.decodeFromConstraints(constraints, videoEl, (result, error) => {
       if (result) {
+        // 🎯 ดักจับ: ป้องกันลูปเบิ้ลซ้ำ ถ้าสถานะถูกปิดไปแล้วให้ยกเลิกทันที
+        if (!isScanning) return 
+
         const serial = result.getText()
         console.log('Barcode Scanned:', serial)
         
         input.value = serial
-        stopScanning() // เจอผลลัพธ์แล้ว สั่งกวาดล้างกล่องวิดีโอทันที
-        button.click()
+        
+        // สั่งระเบิดกล่องวิดีโอทิ้งทันทีหลังแสกนติดครั้งแรก เพื่อตัดลูปกล้อง
+        stopScanning() 
+
+        // 🎯 หน่วงจังหวะเล็กน้อย 100ms เพื่อให้สตรีมปิดสมบูรณ์ แล้วค่อยคลิกค้นหาข้อมูล
+        setTimeout(() => {
+          button.click()
+        }, 100)
       }
     })
 
