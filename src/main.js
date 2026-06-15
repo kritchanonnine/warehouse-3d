@@ -13,7 +13,15 @@ scene.background = new THREE.Color(0xf0f0f0)
 
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000)
 // 🎯 พิกัดกล้องเริ่มต้นที่คุณตั้งไว้
-camera.position.set(8, 5, 6)
+if (window.innerWidth < 768) {
+
+  camera.position.set(10,8,10)
+
+} else {
+
+  camera.position.set(8,5,6)
+
+}
 
 const renderer = new THREE.WebGLRenderer({ antialias: true })
 renderer.setPixelRatio(window.devicePixelRatio)
@@ -164,6 +172,13 @@ resetBtn.innerText = 'ย้อนกลับ'
 Object.assign(resetBtn.style, { position: 'absolute', top: '20px', left: '325px', padding: '10px 20px', backgroundColor: '#8e9aa8', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', zIndex: 10 })
 document.body.appendChild(resetBtn)
 const scanBtn = document.createElement('button')
+if (window.innerWidth < 768) {
+
+  input.style.fontSize = '16px'
+  button.style.fontSize = '16px'
+  resetBtn.style.fontSize = '16px'
+
+}
 
 scanBtn.innerText = '📷 Scan Barcode'
 
@@ -194,6 +209,31 @@ Object.assign(infoPanel.style, {
 })
 updateInfoPanel(null, "ข้อมูลสิ่งอุปกรณ์")
 document.body.appendChild(infoPanel)
+function updateResponsiveUI() {
+
+  if (window.innerWidth < 768) {
+
+    infoPanel.style.width = '90%'
+    infoPanel.style.left = '5%'
+    infoPanel.style.right = 'auto'
+    infoPanel.style.top = '80px'
+
+  } else {
+
+    infoPanel.style.width = '300px'
+    infoPanel.style.right = '20px'
+    infoPanel.style.left = 'auto'
+
+  }
+
+}
+
+updateResponsiveUI()
+
+window.addEventListener(
+  'resize',
+  updateResponsiveUI
+)
 const video = document.createElement('video')
 
 Object.assign(video.style, {
