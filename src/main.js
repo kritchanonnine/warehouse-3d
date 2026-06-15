@@ -255,7 +255,7 @@ window.addEventListener(
   'resize',
   updateResponsiveUI
 )
-let video = document.createElement('video')
+
 
 Object.assign(video.style, {
   position: 'fixed',
