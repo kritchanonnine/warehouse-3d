@@ -337,25 +337,21 @@ button.onclick = async () => {
 // 🎯 ระบบทำงานของปุ่ม ย้อนกลับ (ใช้พิกัดแท้จริงตามที่คุณตั้งค่ามา)
 // ====================
 resetBtn.onclick = () => {
-  input.value = '' 
+  stopScanner()
+  input.value = ''
   selectedObject = null
-  resetWarehouseColors() 
-  updateInfoPanel(null, "ข้อมูลสิ่งอุปกรณ์") 
-  
-  // 🎯 ดึงกลับมาที่มุมกล่อง (0, 3.5, 5) และหันไปโฟกัสที่ (5, -2, -1) ตามที่คุณเซ็ตไว้ตอนแรกเป๊ะๆ
- if (window.innerWidth < 768) {
+  resetWarehouseColors()
+  updateInfoPanel(null, "ข้อมูลสิ่งอุปกรณ์")
 
-  cameraTargetPos.set(10,8,10)
+  if (window.innerWidth < 768) {
+    cameraTargetPos.set(10,8,10)
+  } else {
+    cameraTargetPos.set(8,5,6)
+  }
 
-} else {
-
-  cameraTargetPos.set(8,5,6)
-
-}
   lookTarget.set(2.5, 0.8, 2.5)
   isTweening = true
 }
-scanBtn.onclick = async () => {
 
   scanBtn.onclick = async () => {
   try {
@@ -364,44 +360,52 @@ scanBtn.onclick = async () => {
 
     const devices = await BrowserMultiFormatReader.listVideoInputDevices()
 
-if (result && isScanning) {
+    if (!devices.length) {
+      alert('ไม่พบกล้อง')
+      return
+    }
 
-  isScanning = false
+    const deviceId = devices[0].deviceId
 
-  const serial = result.getText()
-  console.log('Barcode:', serial)
+    isScanning = true
 
-  input.value = serial
+    barcodeReader.decodeFromVideoDevice(
+      deviceId,
+      video,
+      (result, err) => {
 
-  // 1. STOP ZXing
-  barcodeReader.reset()
+        if (!result || !isScanning) return
 
-  // 2. STOP CAMERA STREAM (สำคัญมาก)
-  if (video.srcObject) {
-    video.srcObject.getTracks().forEach(track => track.stop())
-    video.srcObject = null
-  }
+        isScanning = false
 
-  // 3. ซ่อน video (ไม่ต้องลบ)
-  video.style.display = 'none'
-  video.style.visibility = 'hidden'
+        const serial = result.getText()
+        console.log('Barcode:', serial)
 
-  // 4. เคลียร์ UI state
-  button.click()
-}
+        input.value = serial
+
+        // 🔥 STOP ZXing
+        barcodeReader.reset()
+
+        // 🔥 STOP CAMERA จริง
+        if (video.srcObject) {
+          video.srcObject.getTracks().forEach(t => t.stop())
+          video.srcObject = null
+        }
+
+        video.style.display = 'none'
+        video.style.visibility = 'hidden'
+
+        button.click()
       }
     )
 
-  }
-  catch (err) {
-
+  } catch (err) {
     console.error(err)
-
     alert('เปิดกล้องไม่ได้')
-
   }
-
 }
+
+
 
 // ====================
 // อนิเมชันลูป (Animation Loop)
