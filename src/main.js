@@ -33,7 +33,7 @@ const lookTarget = new THREE.Vector3(2.5, 0.8, 2.5)
 let isTweening = false
 let selectedObject = null
 let warehouse = null
-let isScanning = false // 🎯 เพิ่มสถานะเช็คการเปิด-ปิดกล้อง
+let isScanning = false 
 
 const barcodeReader = new BrowserMultiFormatReader()
 
@@ -48,7 +48,12 @@ function resetWarehouseColors() {
   if (!warehouse) return
   warehouse.traverse((c) => {
     if (c.isMesh && c.material) {
-      c.material.color.copy(BASE_COLOR)
+      // 🎯 ดึงสีดั้งเดิมที่เก็บไว้ใน userData กลับมาใช้แทนการฮาร์ดโค้ดสีเดียว
+      if (c.userData.originalColor) {
+        c.material.color.copy(c.userData.originalColor)
+      } else {
+        c.material.color.copy(BASE_COLOR)
+      }
     }
   })
 }
@@ -69,6 +74,9 @@ function focusObject(object) {
 
   cameraTargetPos.set(center.x, center.y + 1.5, center.z + 2.5)
   lookTarget.copy(center)
+  
+  // 🎯 ปิดการทำงาน Controls ชั่วคราวเพื่อให้ Lerp เคลื่อนที่ได้สมูท ไม่ต้านแรงหน่วงกันเอง
+  controls.enabled = false
   isTweening = true
 }
 
@@ -186,6 +194,8 @@ loader.load('/scene.glb', (gltf) => {
   warehouse.traverse((c) => {
     if (c.isMesh && c.material) {
       c.material = c.material.clone() 
+      // 🎯 ฝังค่าสีต้นฉบับเก็บไว้ในเก็บในข้อมูลแฝงของ Object ก่อนทำการแก้ไขสีสากล
+      c.userData.originalColor = c.material.color.clone()
       c.material.color.copy(BASE_COLOR)
     }
   })
@@ -246,14 +256,18 @@ resetBtn.onclick = () => {
   
   cameraTargetPos.set(8, 5, 6)
   lookTarget.set(2.5, 0.8, 2.5)
+  controls.enabled = false // 🎯 ปิดชั่วคราวให้เลื่อนนิ่มๆ
   isTweening = true
 }
 
 // ====================
-// 🎯 ปรับปรุงระบบสแกนบาร์โค้ด (เสถียรขึ้น ไม่ค้าง ไม่เบิ้ล)
+// ระบบสแกนบาร์โค้ด
 // ====================
 function stopScanning() {
   barcodeReader.reset()
+  if (video.srcObject) {
+    video.srcObject.getTracks().forEach(track => track.stop()) // 🎯 มั่นใจว่าปิดไฟกล้องชิ้นนั้นสนิท
+  }
   video.style.display = 'none'
   scanBtn.innerText = '📷 Scan Barcode'
   scanBtn.style.backgroundColor = '#28a745'
@@ -261,74 +275,12 @@ function stopScanning() {
 }
 
 scanBtn.onclick = async () => {
-  // 🎯 ถ้ากล้องเปิดอยู่แล้วกดซ้ำ ให้ปิดกล้องทันที (Toggle)
   if (isScanning) {
     stopScanning()
     return
   }
 
   try {
-    const devices = await BrowserMultiFormatReader.listVideoInputDevices()
-    if (!devices || devices.length === 0) {
-      alert('ไม่พบกล้องบนอุปกรณ์นี้')
-      return
-    }
-
     video.style.display = 'block'
     scanBtn.innerText = '🛑 Stop Scanning'
     scanBtn.style.backgroundColor = '#dc3545'
-    isScanning = true
-
-    // ดึงกล้องตัวแรก (หรือเปลี่ยนเป็นตัวอื่นถ้าต้องการ)
-    const deviceId = devices[0].deviceId
-
-    // เริ่มถอดรหัสบาร์โค้ด
-    await barcodeReader.decodeFromVideoDevice(deviceId, video, (result, error) => {
-      if (result) {
-        const serial = result.getText()
-        console.log('Barcode Scanned:', serial)
-        
-        input.value = serial
-        
-        // 🎯 สแกนติดแล้ว เคลียร์กล้องทันทีเพื่อป้องกัน Callback ทำงานซ้ำซ้อน
-        stopScanning()
-        
-        // ค้นหาอัตโนมัติ
-        button.click()
-      }
-      // ละเว้น error ระหว่างสแกนหาเฟรมเพื่อไม่ให้คอนโซลรกเกินไป
-    })
-
-  } catch (err) {
-    console.error("Camera error:", err)
-    alert('ไม่สามารถเข้าถึงกล้องได้')
-    stopScanning()
-  }
-}
-
-// ====================
-// อนิเมชันลูป (Animation Loop)
-// ====================
-function animate() {
-  requestAnimationFrame(animate)
-
-  if (isTweening) {
-    camera.position.lerp(cameraTargetPos, 0.08)
-    controls.target.lerp(lookTarget, 0.08)
-
-    if (camera.position.distanceTo(cameraTargetPos) < 0.03) {
-      isTweening = false
-    }
-  }
-
-  controls.update()
-  renderer.render(scene, camera)
-}
-
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight
-  camera.updateProjectionMatrix()
-  renderer.setSize(window.innerWidth, window.innerHeight)
-})
-
-animate()
