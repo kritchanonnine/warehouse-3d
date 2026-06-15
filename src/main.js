@@ -39,7 +39,10 @@ controls.update()
 // สถานะ (State) และ ระบบสี
 // ====================
 // 🎯 ปรับตรงนี้ให้เท่ากับค่าเริ่มต้นด้านบนแล้ว เพื่อไม่ให้กล้องกระตุกตอนเริ่มใช้งาน
-const cameraTargetPos = new THREE.Vector3(8, 5, 6)
+const cameraTargetPos =
+  window.innerWidth < 768
+    ? new THREE.Vector3(10,8,10)
+    : new THREE.Vector3(8,5,6)
 const lookTarget = new THREE.Vector3(2.5, 0.8, 2.5) 
 let isTweening = false
 let selectedObject = null
@@ -197,6 +200,22 @@ Object.assign(scanBtn.style, {
 })
 
 document.body.appendChild(scanBtn)
+if (window.innerWidth < 768) {
+
+  input.style.width = '90%'
+  input.style.left = '5%'
+  input.style.top = '10px'
+
+  button.style.top = '60px'
+  button.style.left = '5%'
+
+  resetBtn.style.top = '60px'
+  resetBtn.style.left = '35%'
+
+  scanBtn.style.top = '60px'
+  scanBtn.style.left = '65%'
+
+}
 
 
 const infoPanel = document.createElement('div')
@@ -319,7 +338,15 @@ resetBtn.onclick = () => {
   updateInfoPanel(null, "ข้อมูลสิ่งอุปกรณ์") 
   
   // 🎯 ดึงกลับมาที่มุมกล่อง (0, 3.5, 5) และหันไปโฟกัสที่ (5, -2, -1) ตามที่คุณเซ็ตไว้ตอนแรกเป๊ะๆ
-  cameraTargetPos.set(8, 5, 6)
+ if (window.innerWidth < 768) {
+
+  cameraTargetPos.set(10,8,10)
+
+} else {
+
+  cameraTargetPos.set(8,5,6)
+
+}
   lookTarget.set(2.5, 0.8, 2.5)
   isTweening = true
 }
