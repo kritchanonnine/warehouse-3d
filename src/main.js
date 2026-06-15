@@ -256,15 +256,18 @@ window.addEventListener(
 const video = document.createElement('video')
 
 Object.assign(video.style, {
-  position: 'absolute',
-  left: '20px',
-  top: '80px',
-  width: '320px',
+  position: 'fixed',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: '90%',
+  maxWidth: '400px',
   border: '2px solid #4f8cff',
   borderRadius: '10px',
   backgroundColor: '#000',
   display: 'none',
-  zIndex: 999
+  visibility: 'hidden',
+  zIndex: 9999
 })
 
 document.body.appendChild(video)
