@@ -391,6 +391,8 @@ scanBtn.onclick = async () => {
 
           video.style.display =
             'none'
+          infoPanel.style.display =
+            'block'
 
           button.click()
 
