@@ -47,6 +47,8 @@ const lookTarget = new THREE.Vector3(2.5, 0.8, 2.5)
 let isTweening = false
 let selectedObject = null
 let warehouse = null
+let isScanning = false
+let currentStream = null
 
 const barcodeReader =
   new BrowserMultiFormatReader()
