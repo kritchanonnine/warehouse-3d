@@ -355,7 +355,8 @@ scanBtn.onclick = async () => {
   try {
 
     video.style.display = 'block'
-    
+    video.style.visibility = 'visible'
+
     const devices =
       await BrowserMultiFormatReader.listVideoInputDevices()
 
@@ -372,45 +373,35 @@ scanBtn.onclick = async () => {
     barcodeReader.decodeFromVideoDevice(
       deviceId,
       video,
-      (result) => {
+      (result, err) => {
 
-       if (result) {
+        if (result) {
 
-  const serial =
-    result.getText()
+          const serial =
+            result.getText()
 
-  console.log(
-    'Barcode:',
-    serial
-  )
+          console.log(
+            'Barcode:',
+            serial
+          )
 
-  input.value =
-    serial
+          input.value =
+            serial
 
-  // ปิดการสแกน
-  barcodeReader.reset()
+          // ปิดการสแกน
+          barcodeReader.reset()
 
-  // ซ่อนกล่องกล้อง
-  video.pause()
+          // ซ่อนกล่องกล้อง
+          video.style.display =
+            'none'
 
-  if (video.srcObject) {
+          video.style.visibility =
+            'hidden'
 
-    video.srcObject
-      .getTracks()
-      .forEach(track => track.stop())
+          // ค้นหาอัตโนมัติ
+          button.click()
 
-    video.srcObject = null
-
-  }
-
-  video.style.display = 'none'
-  console.log('ปิดกล้องแล้ว')
- 
-
-  // ค้นหาอัตโนมัติ
-  button.click()
-
-}
+        }
 
       }
     )
