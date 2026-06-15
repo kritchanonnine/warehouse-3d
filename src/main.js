@@ -355,7 +355,7 @@ scanBtn.onclick = async () => {
   try {
 
     video.style.display = 'block'
-
+    infoPanel.style.display = 'none'
     const devices =
       await BrowserMultiFormatReader.listVideoInputDevices()
 
