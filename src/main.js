@@ -144,7 +144,7 @@ scene.add(dirLight)
 scene.add(new THREE.AmbientLight(0xffffff, 1.5))
 
 // ====================
-// 🎯 ปรับปรุงระบบสไตล์ CSS ป้องกันการซ้อนทับกันแบบ 100%
+// ระบบสไตล์ CSS 
 // ====================
 const styleSheet = document.createElement("style")
 styleSheet.innerText = `
@@ -154,7 +154,7 @@ styleSheet.innerText = `
   .control-panel {
     position: absolute !important; top: 20px !important; left: 20px !important; z-index: 100 !important;
     display: grid !important; 
-    grid-template-columns: 200px auto auto auto !important; /* บังคับแบ่งคอลัมน์ชัดเจน ไม่ยอมให้ทับกัน */
+    grid-template-columns: 200px auto auto auto !important; 
     align-items: center !important; 
     gap: 10px !important;
     width: auto !important;
@@ -164,17 +164,17 @@ styleSheet.innerText = `
   }
   
   .control-panel input {
-    position: static !important; /* ล้างค่า absolute เก่าที่อาจจะค้างมาจาก style.css */
+    position: static !important; 
     width: 100% !important; padding: 10px 12px !important; border-radius: 8px !important;
     border: 1px solid #ccd1d9 !important; outline: none !important; font-size: 14px !important;
   }
 
   .btn-group-container {
-    display: contents !important; /* ปล่อยให้ปุ่มลูกเรียงตาม Grid ของตัวแม่ในคอม */
+    display: contents !important; 
   }
 
   .btn {
-    position: static !important; /* ล้างค่า absolute เก่าที่ทำปุ่มซ้อนกัน */
+    position: static !important; 
     padding: 10px 18px !important; border: none !important; border-radius: 8px !important;
     cursor: pointer !important; font-weight: bold !important; font-size: 14px !important; 
     white-space: nowrap !important; text-align: center !important;
@@ -193,9 +193,9 @@ styleSheet.innerText = `
 
   /* หน้าต่างสตรีมวิดีโอกล้อง */
   .video-preview {
-    position: absolute !important; left: 50 !important; top: 45% !important; left: 50% !important; transform: translate(-50%, -50%) !important;
+    position: absolute !important; top: 45% !important; left: 50% !important; transform: translate(-50%, -50%) !important;
     width: 85% !important; max-width: 360px !important; aspect-ratio: 4/3 !important; border: 3px solid #4f8cff !important;
-    border-radius: 16px !important; background-color: #000 !important; display: none; z-index: 999 !important;
+    border-radius: 16px !important; background-color: #000 !important; display: none !important; z-index: 999 !important;
     box-shadow: 0 20px 50px rgba(0,0,0,0.4) !important; object-fit: cover !important;
   }
 
@@ -203,12 +203,12 @@ styleSheet.innerText = `
   @media (max-width: 768px) {
     .control-panel {
       top: 12px !important; left: 12px !important; right: 12px !important;
-      grid-template-columns: 100% !important; /* บนมือถือเปลี่ยนเป็นเรียงแถวแนวตั้งลงมา */
+      grid-template-columns: 100% !important; 
       gap: 8px !important; padding: 12px !important; border-radius: 14px !important;
     }
     
     .btn-group-container {
-      display: grid !important; /* บนมือถือแปลงร่างกลุ่มปุ่มเป็น Grid 3 คอลัมน์ขนานกัน */
+      display: grid !important; 
       grid-template-columns: 1fr 1fr 1.2fr !important; 
       gap: 6px !important; width: 100% !important;
     }
@@ -238,7 +238,7 @@ const input = document.createElement('input')
 input.placeholder = 'กรอก Serial Number...'
 controlPanel.appendChild(input)
 
-// 🎯 สร้างกล่องครอบปุ่ม เพื่อจัดระเบียบแบบแยกสัดส่วนชัดเจน
+// สร้างกล่องครอบปุ่ม
 const btnGroupContainer = document.createElement('div')
 btnGroupContainer.className = 'btn-group-container'
 
@@ -348,14 +348,15 @@ resetBtn.onclick = () => {
 }
 
 // ====================
-// ระบบสแกนบาร์โค้ด
+// 🎯 แก้ไขฟังก์ชันสแกนบาร์โค้ด และสั่งปิดกล่องดำสนิท
 // ====================
 function stopScanning() {
   barcodeReader.reset()
   if (video.srcObject) {
     video.srcObject.getTracks().forEach(track => track.stop()) 
   }
-  video.style.display = 'none'
+  // 🎯 บังคับปิด Element ด้วยสไตล์เจาะจงระดับชั้นสูงสุดเพื่อเคลียร์กล่องสีดำ
+  video.style.setProperty('display', 'none', 'important')
   scanBtn.innerText = '📷 Scan'
   scanBtn.style.backgroundColor = '#28a745'
   isScanning = false
@@ -368,7 +369,8 @@ scanBtn.onclick = async () => {
   }
 
   try {
-    video.style.display = 'block'
+    // 🎯 เปิดแสดงผลหน้าจอวิดีโอ
+    video.style.setProperty('display', 'block', 'important')
     scanBtn.innerText = '🛑 Stop'
     scanBtn.style.backgroundColor = '#dc3545'
     isScanning = true
