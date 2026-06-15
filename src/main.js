@@ -12,7 +12,6 @@ const scene = new THREE.Scene()
 scene.background = new THREE.Color(0xf0f0f0)
 
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000)
-// 🎯 พิกัดกล้องเริ่มต้นที่คุณตั้งไว้
 camera.position.set(8, 5, 6)
 
 const renderer = new THREE.WebGLRenderer({ antialias: true })
@@ -23,25 +22,20 @@ document.body.appendChild(renderer.domElement)
 const controls = new OrbitControls(camera, renderer.domElement)
 controls.enableDamping = true
 controls.dampingFactor = 0.05
-// 🎯 จุดโฟกัสเริ่มต้นจริงของโมเดลคุณ
 controls.target.set(2.5, 0.8, 2.5)
 controls.update()
 
 // ====================
 // สถานะ (State) และ ระบบสี
 // ====================
-// 🎯 ปรับตรงนี้ให้เท่ากับค่าเริ่มต้นด้านบนแล้ว เพื่อไม่ให้กล้องกระตุกตอนเริ่มใช้งาน
 const cameraTargetPos = new THREE.Vector3(8, 5, 6)
 const lookTarget = new THREE.Vector3(2.5, 0.8, 2.5) 
 let isTweening = false
 let selectedObject = null
 let warehouse = null
+let isScanning = false // 🎯 เพิ่มสถานะเช็คการเปิด-ปิดกล้อง
 
-const barcodeReader =
-  new BrowserMultiFormatReader()
-
-
-
+const barcodeReader = new BrowserMultiFormatReader()
 
 const BASE_COLOR = new THREE.Color(0xe6eaf0)
 const HIGHLIGHT_COLOR = new THREE.Color(0x4f8cff)
@@ -68,19 +62,16 @@ function highlightObject(object) {
   })
 }
 
-// ฟังก์ชันโฟกัสวัตถุเมื่อเสิร์ชเจอ
 function focusObject(object) {
   const box = new THREE.Box3().setFromObject(object)
   const center = new THREE.Vector3()
   box.getCenter(center)
 
-  // วิ่งเข้าไปหาวัตถุโดยอิงระยะจากมุมตรงหน้า
   cameraTargetPos.set(center.x, center.y + 1.5, center.z + 2.5)
   lookTarget.copy(center)
   isTweening = true
 }
 
-// ฟังก์ชันแสดงผลบน UI
 function updateInfoPanel(itemData = null, defaultName = "ข้อมูลสิ่งอุปกรณ์") {
   if (!itemData) {
     infoPanel.innerHTML = `
@@ -163,26 +154,11 @@ const resetBtn = document.createElement('button')
 resetBtn.innerText = 'ย้อนกลับ'
 Object.assign(resetBtn.style, { position: 'absolute', top: '20px', left: '325px', padding: '10px 20px', backgroundColor: '#8e9aa8', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', zIndex: 10 })
 document.body.appendChild(resetBtn)
+
 const scanBtn = document.createElement('button')
-
 scanBtn.innerText = '📷 Scan Barcode'
-
-Object.assign(scanBtn.style, {
-  position: 'absolute',
-  top: '20px',
-  left: '450px',
-  padding: '10px 20px',
-  backgroundColor: '#28a745',
-  color: 'white',
-  border: 'none',
-  borderRadius: '6px',
-  cursor: 'pointer',
-  fontWeight: 'bold',
-  zIndex: 10
-})
-
+Object.assign(scanBtn.style, { position: 'absolute', top: '20px', left: '450px', padding: '10px 20px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', zIndex: 10 })
 document.body.appendChild(scanBtn)
-
 
 const infoPanel = document.createElement('div')
 Object.assign(infoPanel.style, { 
@@ -194,21 +170,11 @@ Object.assign(infoPanel.style, {
 })
 updateInfoPanel(null, "ข้อมูลสิ่งอุปกรณ์")
 document.body.appendChild(infoPanel)
+
 const video = document.createElement('video')
-
-Object.assign(video.style, {
-  position: 'absolute',
-  left: '20px',
-  top: '80px',
-  width: '320px',
-  border: '2px solid #4f8cff',
-  borderRadius: '10px',
-  backgroundColor: '#000',
-  display: 'none',
-  zIndex: 999
-})
-
+Object.assign(video.style, { position: 'absolute', left: '20px', top: '80px', width: '320px', border: '2px solid #4f8cff', borderRadius: '10px', backgroundColor: '#000', display: 'none', zIndex: 999 })
 document.body.appendChild(video)
+
 // ====================
 // โหลดโมเดล 3D คลังสินค้า
 // ====================
@@ -270,7 +236,7 @@ button.onclick = async () => {
 }
 
 // ====================
-// 🎯 ระบบทำงานของปุ่ม ย้อนกลับ (ใช้พิกัดแท้จริงตามที่คุณตั้งค่ามา)
+// ระบบทำงานของปุ่ม ย้อนกลับ
 // ====================
 resetBtn.onclick = () => {
   input.value = '' 
@@ -278,69 +244,66 @@ resetBtn.onclick = () => {
   resetWarehouseColors() 
   updateInfoPanel(null, "ข้อมูลสิ่งอุปกรณ์") 
   
-  // 🎯 ดึงกลับมาที่มุมกล่อง (0, 3.5, 5) และหันไปโฟกัสที่ (5, -2, -1) ตามที่คุณเซ็ตไว้ตอนแรกเป๊ะๆ
   cameraTargetPos.set(8, 5, 6)
   lookTarget.set(2.5, 0.8, 2.5)
   isTweening = true
 }
+
+// ====================
+// 🎯 ปรับปรุงระบบสแกนบาร์โค้ด (เสถียรขึ้น ไม่ค้าง ไม่เบิ้ล)
+// ====================
+function stopScanning() {
+  barcodeReader.reset()
+  video.style.display = 'none'
+  scanBtn.innerText = '📷 Scan Barcode'
+  scanBtn.style.backgroundColor = '#28a745'
+  isScanning = false
+}
+
 scanBtn.onclick = async () => {
+  // 🎯 ถ้ากล้องเปิดอยู่แล้วกดซ้ำ ให้ปิดกล้องทันที (Toggle)
+  if (isScanning) {
+    stopScanning()
+    return
+  }
 
   try {
-
-    video.style.display = 'block'
-
-    const devices =
-      await BrowserMultiFormatReader.listVideoInputDevices()
-
-    if (!devices.length) {
-
-      alert('ไม่พบกล้อง')
+    const devices = await BrowserMultiFormatReader.listVideoInputDevices()
+    if (!devices || devices.length === 0) {
+      alert('ไม่พบกล้องบนอุปกรณ์นี้')
       return
-
     }
 
-    const deviceId =
-      devices[0].deviceId
+    video.style.display = 'block'
+    scanBtn.innerText = '🛑 Stop Scanning'
+    scanBtn.style.backgroundColor = '#dc3545'
+    isScanning = true
 
-    barcodeReader.decodeFromVideoDevice(
-      deviceId,
-      video,
-      (result) => {
+    // ดึงกล้องตัวแรก (หรือเปลี่ยนเป็นตัวอื่นถ้าต้องการ)
+    const deviceId = devices[0].deviceId
 
-        if (result) {
-
-          const serial =
-            result.getText()
-
-          console.log(
-            'Barcode:',
-            serial
-          )
-
-          input.value =
-            serial
-
-          barcodeReader.reset()
-
-          video.style.display =
-            'none'
-
-          button.click()
-
-        }
-
+    // เริ่มถอดรหัสบาร์โค้ด
+    await barcodeReader.decodeFromVideoDevice(deviceId, video, (result, error) => {
+      if (result) {
+        const serial = result.getText()
+        console.log('Barcode Scanned:', serial)
+        
+        input.value = serial
+        
+        // 🎯 สแกนติดแล้ว เคลียร์กล้องทันทีเพื่อป้องกัน Callback ทำงานซ้ำซ้อน
+        stopScanning()
+        
+        // ค้นหาอัตโนมัติ
+        button.click()
       }
-    )
+      // ละเว้น error ระหว่างสแกนหาเฟรมเพื่อไม่ให้คอนโซลรกเกินไป
+    })
 
+  } catch (err) {
+    console.error("Camera error:", err)
+    alert('ไม่สามารถเข้าถึงกล้องได้')
+    stopScanning()
   }
-  catch (err) {
-
-    console.error(err)
-
-    alert('เปิดกล้องไม่ได้')
-
-  }
-
 }
 
 // ====================
