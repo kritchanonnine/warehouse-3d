@@ -57,13 +57,19 @@ let currentStream = null
 // 🔥 วางตรงนี้
 function stopScanner() {
   isScanning = false
+
+  // 1. STOP ZXing (ต้องทำก่อน)
   barcodeReader.reset()
 
-  if (video.srcObject) {
-    video.srcObject.getTracks().forEach(t => t.stop())
-    video.srcObject = null
+  // 2. STOP camera stream (ตัวจริง)
+  const stream = video.srcObject
+  if (stream) {
+    stream.getTracks().forEach(track => track.stop())
   }
 
+  video.srcObject = null
+
+  // 3. hide UI
   video.style.display = 'none'
   video.style.visibility = 'hidden'
 }
