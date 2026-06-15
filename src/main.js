@@ -284,3 +284,55 @@ scanBtn.onclick = async () => {
     video.style.display = 'block'
     scanBtn.innerText = '🛑 Stop Scanning'
     scanBtn.style.backgroundColor = '#dc3545'
+    isScanning = true
+
+    // 🎯 แก้บั๊กเปิดกล้องหน้าบนมือถือ: บังคับส่ง Constraints สั่งให้เปิดกล้องหลัง (facingMode: environment)
+    const constraints = {
+      video: { facingMode: { ideal: "environment" } }
+    }
+
+    await barcodeReader.decodeFromConstraints(constraints, video, (result, error) => {
+      if (result) {
+        const serial = result.getText()
+        console.log('Barcode Scanned:', serial)
+        
+        input.value = serial
+        stopScanning()
+        button.click()
+      }
+    })
+
+  } catch (err) {
+    console.error("Camera error:", err)
+    alert('ไม่สามารถเข้าถึงกล้องหลังของอุปกรณ์ได้')
+    stopScanning()
+  }
+}
+
+// ====================
+// อนิเมชันลูป (Animation Loop)
+// ====================
+function animate() {
+  requestAnimationFrame(animate)
+
+  if (isTweening) {
+    camera.position.lerp(cameraTargetPos, 0.08)
+    controls.target.lerp(lookTarget, 0.08)
+
+    if (camera.position.distanceTo(cameraTargetPos) < 0.03) {
+      isTweening = false
+      controls.enabled = true // 🎯 เปิดการใช้งานกลับคืนมาเมื่อกล้องวิ่งถึงจุดหมายเรียบร้อยแล้ว
+    }
+  }
+
+  controls.update()
+  renderer.render(scene, camera)
+}
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight
+  camera.updateProjectionMatrix()
+  renderer.setSize(window.innerWidth, window.innerHeight)
+})
+
+animate()
