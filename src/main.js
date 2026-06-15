@@ -47,12 +47,26 @@ const lookTarget = new THREE.Vector3(2.5, 0.8, 2.5)
 let isTweening = false
 let selectedObject = null
 let warehouse = null
+
+
+const barcodeReader = new BrowserMultiFormatReader()
+
 let isScanning = false
 let currentStream = null
 
-const barcodeReader =
-  new BrowserMultiFormatReader()
+// 🔥 วางตรงนี้
+function stopScanner() {
+  isScanning = false
+  barcodeReader.reset()
 
+  if (video.srcObject) {
+    video.srcObject.getTracks().forEach(t => t.stop())
+    video.srcObject = null
+  }
+
+  video.style.display = 'none'
+  video.style.visibility = 'hidden'
+}
 
 
 
