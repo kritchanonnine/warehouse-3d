@@ -364,65 +364,31 @@ scanBtn.onclick = async () => {
 
     const devices = await BrowserMultiFormatReader.listVideoInputDevices()
 
-    if (!devices.length) {
-      alert('ไม่พบกล้อง')
-      return
-    }
+if (result && isScanning) {
 
-    const deviceId = devices[0].deviceId
+  isScanning = false
 
-    isScanning = true
+  const serial = result.getText()
+  console.log('Barcode:', serial)
 
-    const deviceId =
-      devices[0].deviceId
+  input.value = serial
 
-    barcodeReader.decodeFromVideoDevice(
-      deviceId,
-      video,
-      (result, err) => {
+  // 1. STOP ZXing
+  barcodeReader.reset()
 
-        if (result) {
+  // 2. STOP CAMERA STREAM (สำคัญมาก)
+  if (video.srcObject) {
+    video.srcObject.getTracks().forEach(track => track.stop())
+    video.srcObject = null
+  }
 
-          const serial =
-            result.getText()
+  // 3. ซ่อน video (ไม่ต้องลบ)
+  video.style.display = 'none'
+  video.style.visibility = 'hidden'
 
-          console.log(
-            'Barcode:',
-            serial
-          )
-
-          input.value =
-            serial
-
-          barcodeReader.reset()
-
-// ลบกล่องกล้องออกจากหน้าเว็บ
-video.remove()
-
-// สร้างกล่องกล้องใหม่ไว้รอรอบหน้า
-video = document.createElement('video')
-
-Object.assign(video.style, {
-  position: 'fixed',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: '90%',
-  maxWidth: '400px',
-  border: '2px solid #4f8cff',
-  borderRadius: '10px',
-  backgroundColor: '#000',
-  display: 'none',
-  zIndex: 9999
-})
-
-document.body.appendChild(video)
-
-// ค้นหาอัตโนมัติ
-button.click()
-
-        }
-
+  // 4. เคลียร์ UI state
+  button.click()
+}
       }
     )
 
