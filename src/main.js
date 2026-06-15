@@ -374,28 +374,41 @@ scanBtn.onclick = async () => {
       video,
       (result) => {
 
-        if (result) {
+       if (result) {
 
-          const serial =
-            result.getText()
+  const serial =
+    result.getText()
 
-          console.log(
-            'Barcode:',
-            serial
-          )
+  console.log(
+    'Barcode:',
+    serial
+  )
 
-          input.value =
-            serial
+  input.value =
+    serial
 
-          barcodeReader.reset()
+  // ปิดการสแกน
+  barcodeReader.reset()
 
-          video.style.display =
-            'none'
-          
+  // ซ่อนกล่องกล้อง
+  video.pause()
 
-          button.click()
+  if (video.srcObject) {
 
-        }
+    video.srcObject
+      .getTracks()
+      .forEach(track => track.stop())
+
+    video.srcObject = null
+
+  }
+
+  video.style.display = 'none'
+
+  // ค้นหาอัตโนมัติ
+  button.click()
+
+}
 
       }
     )
