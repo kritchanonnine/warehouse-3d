@@ -39,10 +39,7 @@ controls.update()
 // สถานะ (State) และ ระบบสี
 // ====================
 // 🎯 ปรับตรงนี้ให้เท่ากับค่าเริ่มต้นด้านบนแล้ว เพื่อไม่ให้กล้องกระตุกตอนเริ่มใช้งาน
-const cameraTargetPos =
-  window.innerWidth < 768
-    ? new THREE.Vector3(10,8,10)
-    : new THREE.Vector3(8,5,6)
+const cameraTargetPos = new THREE.Vector3(8, 5, 6)
 const lookTarget = new THREE.Vector3(2.5, 0.8, 2.5) 
 let isTweening = false
 let selectedObject = null
@@ -200,22 +197,6 @@ Object.assign(scanBtn.style, {
 })
 
 document.body.appendChild(scanBtn)
-if (window.innerWidth < 768) {
-
-  input.style.width = '90%'
-  input.style.left = '5%'
-  input.style.top = '10px'
-
-  button.style.top = '60px'
-  button.style.left = '5%'
-
-  resetBtn.style.top = '60px'
-  resetBtn.style.left = '35%'
-
-  scanBtn.style.top = '60px'
-  scanBtn.style.left = '65%'
-
-}
 
 
 const infoPanel = document.createElement('div')
@@ -232,10 +213,10 @@ function updateResponsiveUI() {
 
   if (window.innerWidth < 768) {
 
-    infoPanel.style.width = '95%'
-    infoPanel.style.left = '2.5%'
+    infoPanel.style.width = '90%'
+    infoPanel.style.left = '5%'
     infoPanel.style.right = 'auto'
-    infoPanel.style.top = '130px'
+    infoPanel.style.top = '80px'
 
   } else {
 
@@ -253,21 +234,18 @@ window.addEventListener(
   'resize',
   updateResponsiveUI
 )
-let video = document.createElement('video')
+const video = document.createElement('video')
 
 Object.assign(video.style, {
-  position: 'fixed',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: '90%',
-  maxWidth: '400px',
+  position: 'absolute',
+  left: '20px',
+  top: '80px',
+  width: '320px',
   border: '2px solid #4f8cff',
   borderRadius: '10px',
   backgroundColor: '#000',
   display: 'none',
-  visibility: 'hidden',
-  zIndex: 9999
+  zIndex: 999
 })
 
 document.body.appendChild(video)
@@ -341,15 +319,7 @@ resetBtn.onclick = () => {
   updateInfoPanel(null, "ข้อมูลสิ่งอุปกรณ์") 
   
   // 🎯 ดึงกลับมาที่มุมกล่อง (0, 3.5, 5) และหันไปโฟกัสที่ (5, -2, -1) ตามที่คุณเซ็ตไว้ตอนแรกเป๊ะๆ
- if (window.innerWidth < 768) {
-
-  cameraTargetPos.set(10,8,10)
-
-} else {
-
-  cameraTargetPos.set(8,5,6)
-
-}
+  cameraTargetPos.set(8, 5, 6)
   lookTarget.set(2.5, 0.8, 2.5)
   isTweening = true
 }
@@ -358,7 +328,6 @@ scanBtn.onclick = async () => {
   try {
 
     video.style.display = 'block'
-    video.style.visibility = 'visible'
 
     const devices =
       await BrowserMultiFormatReader.listVideoInputDevices()
@@ -376,7 +345,7 @@ scanBtn.onclick = async () => {
     barcodeReader.decodeFromVideoDevice(
       deviceId,
       video,
-      (result, err) => {
+      (result) => {
 
         if (result) {
 
@@ -393,30 +362,10 @@ scanBtn.onclick = async () => {
 
           barcodeReader.reset()
 
-// ลบกล่องกล้องออกจากหน้าเว็บ
-video.remove()
+          video.style.display =
+            'none'
 
-// สร้างกล่องกล้องใหม่ไว้รอรอบหน้า
-video = document.createElement('video')
-
-Object.assign(video.style, {
-  position: 'fixed',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: '90%',
-  maxWidth: '400px',
-  border: '2px solid #4f8cff',
-  borderRadius: '10px',
-  backgroundColor: '#000',
-  display: 'none',
-  zIndex: 9999
-})
-
-document.body.appendChild(video)
-
-// ค้นหาอัตโนมัติ
-button.click()
+          button.click()
 
         }
 
