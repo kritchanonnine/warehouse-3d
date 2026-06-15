@@ -232,10 +232,10 @@ function updateResponsiveUI() {
 
   if (window.innerWidth < 768) {
 
-    infoPanel.style.width = '90%'
-    infoPanel.style.left = '5%'
+    infoPanel.style.width = '95%'
+    infoPanel.style.left = '2.5%'
     infoPanel.style.right = 'auto'
-    infoPanel.style.top = '120px'
+    infoPanel.style.top = '130px'
 
   } else {
 
