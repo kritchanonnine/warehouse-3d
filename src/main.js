@@ -144,7 +144,7 @@ scene.add(dirLight)
 scene.add(new THREE.AmbientLight(0xffffff, 1.5))
 
 // ====================
-// ระบบสไตล์ CSS 
+// ระบบสไตล์ CSS แบบ Responsive
 // ====================
 const styleSheet = document.createElement("style")
 styleSheet.innerText = `
@@ -191,12 +191,12 @@ styleSheet.innerText = `
     border: 1px solid rgba(255,255,255,0.5) !important;
   }
 
-  /* หน้าต่างสตรีมวิดีโอกล้อง */
-  .video-preview {
-    position: absolute !important; top: 45% !important; left: 50% !important; transform: translate(-50%, -50%) !important;
-    width: 85% !important; max-width: 360px !important; aspect-ratio: 4/3 !important; border: 3px solid #4f8cff !important;
-    border-radius: 16px !important; background-color: #000 !important; display: none !important; z-index: 999 !important;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.4) !important; object-fit: cover !important;
+  /* 🎯 ปรับแต่งหน้าต่างกล้อง ให้ชัวร์ว่าอยู่กึ่งกลางเหนือโมเดล */
+  .video-preview-active {
+    position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important;
+    width: 85% !important; max-width: 360px !important; aspect-ratio: 4/3 !important; border: 4px solid #4f8cff !important;
+    border-radius: 16px !important; background-color: #000 !important; z-index: 9999 !important;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5) !important; object-fit: cover !important;
   }
 
   /* 📱 ปรับเลย์เอาต์อัตโนมัติบน มือถือ และ ไอแพด (จอเล็กกว่า 768px) */
@@ -222,8 +222,8 @@ styleSheet.innerText = `
       width: auto !important; padding: 16px !important; border-radius: 14px !important;
     }
 
-    .video-preview {
-      width: 75% !important; max-width: 290px !important; top: 50% !important;
+    .video-preview-active {
+      width: 75% !important; max-width: 290px !important;
     }
   }
 `
@@ -266,10 +266,6 @@ infoPanel.className = 'info-panel'
 document.body.appendChild(infoPanel)
 updateInfoPanel(null, "ข้อมูลสิ่งอุปกรณ์")
 
-// ตัวเล่นวิดีโอ
-const video = document.createElement('video')
-video.className = 'video-preview'
-document.body.appendChild(video)
 
 // ====================
 // โหลดโมเดล 3D คลังสินค้า
@@ -348,17 +344,22 @@ resetBtn.onclick = () => {
 }
 
 // ====================
-// 🎯 แก้ไขฟังก์ชันสแกนบาร์โค้ด และสั่งปิดกล่องดำสนิท
+// 🎯 ปรับปรุงระบบสแกนบาร์โค้ด (สร้าง/ลบทิ้ง ป้องกันกล่องดำค้าง 100%)
 // ====================
 function stopScanning() {
   barcodeReader.reset()
-  if (video.srcObject) {
-    video.srcObject.getTracks().forEach(track => track.stop()) 
-  }
-  // 🎯 บังคับปิด Element ด้วยสไตล์เจาะจงระดับชั้นสูงสุดเพื่อเคลียร์กล่องสีดำ
-  video.style.setProperty('display', 'none', 'important')
+  
+  // 🎯 ค้นหาแท็กวิดีโอที่สแกนอยู่ทั้งหมดในหน้าจอ แล้วสั่งทำลายทิ้งทันที
+  const activeVideos = document.querySelectorAll('.video-preview-active')
+  activeVideos.forEach(v => {
+    if (v.srcObject) {
+      v.srcObject.getTracks().forEach(track => track.stop())
+    }
+    v.remove() // ลบ Element ออกจากเว็บถาวร กล่องดำหายแน่นอน
+  })
+
   scanBtn.innerText = '📷 Scan'
-  scanBtn.style.backgroundColor = '#28a745'
+  scanBtn.style.setProperty('background-color', '#28a745', 'important')
   isScanning = false
 }
 
@@ -369,23 +370,26 @@ scanBtn.onclick = async () => {
   }
 
   try {
-    // 🎯 เปิดแสดงผลหน้าจอวิดีโอ
-    video.style.setProperty('display', 'block', 'important')
-    scanBtn.innerText = '🛑 Stop'
-    scanBtn.style.backgroundColor = '#dc3545'
     isScanning = true
+    scanBtn.innerText = '🛑 Stop'
+    scanBtn.style.setProperty('background-color', '#dc3545', 'important')
+
+    // 🎯 ค่อยสร้างแท็กวิดีโอขึ้นมาใหม่เฉพาะตอนที่เปิดใช้สแกนเท่านั้น
+    const videoEl = document.createElement('video')
+    videoEl.className = 'video-preview-active'
+    document.body.appendChild(videoEl)
 
     const constraints = {
       video: { facingMode: { ideal: "environment" } }
     }
 
-    await barcodeReader.decodeFromConstraints(constraints, video, (result, error) => {
+    await barcodeReader.decodeFromConstraints(constraints, videoEl, (result, error) => {
       if (result) {
         const serial = result.getText()
         console.log('Barcode Scanned:', serial)
         
         input.value = serial
-        stopScanning()
+        stopScanning() // สแกนเจอแล้ว สั่งทำลายกล่องวิดีโอทันที
         button.click()
       }
     })
