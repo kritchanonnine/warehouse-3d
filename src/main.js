@@ -235,7 +235,7 @@ function updateResponsiveUI() {
     infoPanel.style.width = '90%'
     infoPanel.style.left = '5%'
     infoPanel.style.right = 'auto'
-    infoPanel.style.top = '80px'
+    infoPanel.style.top = '120px'
 
   } else {
 
