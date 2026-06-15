@@ -357,20 +357,21 @@ resetBtn.onclick = () => {
 }
 scanBtn.onclick = async () => {
 
+  scanBtn.onclick = async () => {
   try {
-
     video.style.display = 'block'
     video.style.visibility = 'visible'
 
-    const devices =
-      await BrowserMultiFormatReader.listVideoInputDevices()
+    const devices = await BrowserMultiFormatReader.listVideoInputDevices()
 
     if (!devices.length) {
-
       alert('ไม่พบกล้อง')
       return
-
     }
+
+    const deviceId = devices[0].deviceId
+
+    isScanning = true
 
     const deviceId =
       devices[0].deviceId
