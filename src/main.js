@@ -48,6 +48,7 @@ function resetWarehouseColors() {
   if (!warehouse) return
   warehouse.traverse((c) => {
     if (c.isMesh && c.material) {
+      // ดึงสีดั้งเดิมที่เก็บไว้ใน userData กลับมาใช้
       if (c.userData.originalColor) {
         c.material.color.copy(c.userData.originalColor)
       } else {
@@ -74,6 +75,7 @@ function focusObject(object) {
   cameraTargetPos.set(center.x, center.y + 1.5, center.z + 2.5)
   lookTarget.copy(center)
   
+  // ปิด Controls ชั่วคราวเพื่อให้ Lerp เคลื่อนที่ได้สมูท ไม่ขัดกันเอง
   controls.enabled = false
   isTweening = true
 }
@@ -144,99 +146,124 @@ scene.add(dirLight)
 scene.add(new THREE.AmbientLight(0xffffff, 1.5))
 
 // ====================
-// การสร้างหน้าต่าง UI โครงสร้างใหม่แบบ Responsive
+// การสร้างหน้าต่าง UI แบบ Responsive
 // ====================
-
-// 1. สไตล์ชีตหลักสำหรับคุม Layout ทั่วทั้งหน้าจอ
 const styleSheet = document.createElement("style")
 styleSheet.innerText = `
   * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
   
-  /* กล่องรวมปุ่มค้นหาและอินพุต */
+  /* 💻 สไตล์หลักเริ่มต้น (สำหรับหน้าจอคอมพิวเตอร์ Desktop) */
   .control-panel {
-    position: absolute; top: 16px; left: 16px; z-index: 10;
-    display: flex; flex-wrap: wrap; gap: 8px; max-width: 480px;
-    background: rgba(255, 255, 255, 0.9); padding: 12px; border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08); backdrop-filter: blur(8px);
+    position: absolute; top: 20px; left: 20px; z-index: 10;
+    display: flex; align-items: center; gap: 10px;
+    width: auto; max-width: 650px;
+    background: rgba(255, 255, 255, 0.92); padding: 12px 16px; border-radius: 12px;
+    box-shadow: 0 6px 25px rgba(0,0,0,0.08); backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.6);
   }
+  
   .control-panel input {
-    flex: 1; min-width: 160px; padding: 10px; border-radius: 6px;
-    border: 1px solid #ccc; outline: none; font-size: 14px;
+    width: 200px; padding: 10px 12px; border-radius: 8px;
+    border: 1px solid #ccd1d9; outline: none; font-size: 14px;
+    transition: border-color 0.2s;
   }
+  .control-panel input:focus { border-color: #4f8cff; }
+
   .btn {
-    padding: 10px 16px; border: none; border-radius: 6px;
-    cursor: pointer; font-weight: bold; font-size: 14px; transition: opacity 0.2s;
+    padding: 10px 18px; border: none; border-radius: 8px;
+    cursor: pointer; font-weight: bold; font-size: 14px; 
+    white-space: nowrap; transition: transform 0.1s, opacity 0.2s;
   }
+  .btn:active { transform: scale(0.97); }
   .btn:hover { opacity: 0.9; }
   .btn-search { background-color: #4f8cff; color: white; }
   .btn-reset { background-color: #8e9aa8; color: white; }
   .btn-scan { background-color: #28a745; color: white; }
 
-  /* กล่องแสดงข้อมูลสิ่งอุปกรณ์ */
+  /* กล่องแสดงข้อมูลสิ่งอุปกรณ์ฝั่งขวา */
   .info-panel {
-    position: absolute; top: 16px; right: 16px; width: 300px; z-index: 10;
-    background: rgba(255, 255, 255, 0.95); padding: 18px; border-radius: 14px;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.08); backdrop-filter: blur(10px);
+    position: absolute; top: 20px; right: 20px; width: 320px; z-index: 10;
+    background: rgba(255, 255, 255, 0.95); padding: 20px; border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.08); backdrop-filter: blur(10px);
     border: 1px solid rgba(255,255,255,0.5);
   }
 
-  /* หน้าต่างสตรีมวิดีโอกล้อง */
+  /* หน้าต่างสตรีมวิดีโอกล้อง (ทำให้อยู่ตรงกลางและลอยเหนือทุกสิ่ง) */
   .video-preview {
-    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-    width: 90%; max-width: 400px; aspect-ratio: 4/3; border: 3px solid #4f8cff;
-    border-radius: 12px; background-color: #000; display: none; z-index: 999;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%);
+    width: 85%; max-width: 360px; aspect-ratio: 4/3; border: 3px solid #4f8cff;
+    border-radius: 16px; background-color: #000; display: none; z-index: 999;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.4); object-fit: cover;
   }
 
-  /* 📱 ปรับหน้าตาอัตโนมัติเมื่อเปิดบนมือถือและแท็บเล็ตแนวตั้ง (หน้าจอกว้างน้อยกว่า 768px) */
+  /* 📱 ปรับแต่งเลย์เอาต์สำหรับหน้าจอ มือถือ และ ไอแพดแนวตั้ง (Max-Width: 768px) */
   @media (max-width: 768px) {
     .control-panel {
-      top: 10px; left: 10px; right: 10px; max-width: none;
-      padding: 8px; gap: 6px; border-radius: 8px;
+      top: 12px; left: 12px; right: 12px; max-width: none;
+      flex-direction: column; align-items: stretch; gap: 8px;
+      padding: 12px; border-radius: 14px;
     }
-    .control-panel input { font-size: 13px; padding: 8px; }
-    .btn { padding: 8px 12px; font-size: 13px; }
     
-    /* ผลักกล่องข้อมูลไปไว้ด้านล่างสุดของหน้าจอ เพื่อไม่ให้บังปุ่มและโมเดล */
+    .control-panel input { width: 100%; font-size: 14px; padding: 11px; }
+    
+    .btn-group-mobile {
+      display: flex; gap: 6px; width: 100%;
+    }
+    .btn-group-mobile .btn { flex: 1; padding: 11px 8px; font-size: 13px; text-align: center; }
+    .btn-group-mobile .btn-scan { flex: 1.2; }
+    
+    /* ผลักกล่องข้อมูลลงขอบล่างสุด เพื่อไม่ให้บังโมเดล 3D */
     .info-panel {
-      top: auto; bottom: 20px; left: 10px; right: 10px;
-      width: auto; padding: 14px; border-radius: 10px;
-      box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+      top: auto; bottom: 24px; left: 12px; right: 12px;
+      width: auto; padding: 16px; border-radius: 14px;
+      box-shadow: 0 -6px 25px rgba(0,0,0,0.1);
+    }
+
+    .video-preview {
+      width: 75%; max-width: 290px; top: 50%;
     }
   }
 `
 document.head.appendChild(styleSheet)
 
-// 2. สร้าง Elements เข้าสู่หน้า DOMตามลำดับชั้นโครงสร้างใหม่
+// สร้างกล่องควบคุมหลัก
 const controlPanel = document.createElement('div')
 controlPanel.className = 'control-panel'
 
+// ช่องกรอก Serial
 const input = document.createElement('input')
 input.placeholder = 'กรอก Serial Number...'
 controlPanel.appendChild(input)
 
+// กลุ่มปุ่มกด
+const btnGroupMobile = document.createElement('div')
+btnGroupMobile.className = 'btn-group-mobile'
+
 const button = document.createElement('button')
 button.className = 'btn btn-search'
 button.innerText = 'ค้นหา'
-controlPanel.appendChild(button)
+btnGroupMobile.appendChild(button)
 
 const resetBtn = document.createElement('button')
 resetBtn.className = 'btn btn-reset'
 resetBtn.innerText = 'ย้อนกลับ'
-controlPanel.appendChild(resetBtn)
+btnGroupMobile.appendChild(resetBtn)
 
 const scanBtn = document.createElement('button')
 scanBtn.className = 'btn btn-scan'
 scanBtn.innerText = '📷 Scan'
-controlPanel.appendChild(scanBtn)
+btnGroupMobile.appendChild(scanBtn)
 
+controlPanel.appendChild(btnGroupMobile)
 document.body.appendChild(controlPanel)
 
+// หน้าต่างแสดงข้อมูล
 const infoPanel = document.createElement('div')
 infoPanel.className = 'info-panel'
 document.body.appendChild(infoPanel)
 updateInfoPanel(null, "ข้อมูลสิ่งอุปกรณ์")
 
+// ตัวเล่นวิดีโอบาร์โค้ด
 const video = document.createElement('video')
 video.className = 'video-preview'
 document.body.appendChild(video)
@@ -343,6 +370,7 @@ scanBtn.onclick = async () => {
     scanBtn.style.backgroundColor = '#dc3545'
     isScanning = true
 
+    // บังคับสลับใช้กล้องหลังบนมือถือโดยอัตโนมัติ
     const constraints = {
       video: { facingMode: { ideal: "environment" } }
     }
