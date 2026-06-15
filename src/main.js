@@ -373,8 +373,10 @@ resetBtn.onclick = () => {
   isTweening = true
 }
 
-  scanBtn.onclick = async () => {
+scanBtn.onclick = async () => {
   try {
+    stopScanner() // 🔥 กันค้างรอบเก่า
+
     video.style.display = 'block'
     video.style.visibility = 'visible'
 
@@ -394,7 +396,8 @@ resetBtn.onclick = () => {
       video,
       (result, err) => {
 
-        if (!result || !isScanning) return
+        if (!isScanning) return
+        if (!result) return
 
         isScanning = false
 
@@ -403,17 +406,7 @@ resetBtn.onclick = () => {
 
         input.value = serial
 
-        // 🔥 STOP ZXing
-        barcodeReader.reset()
-
-        // 🔥 STOP CAMERA จริง
-        if (video.srcObject) {
-          video.srcObject.getTracks().forEach(t => t.stop())
-          video.srcObject = null
-        }
-
-        video.style.display = 'none'
-        video.style.visibility = 'hidden'
+        stopScanner() // 🔥 ใช้ตัวเดียวจบ
 
         button.click()
       }
@@ -421,10 +414,10 @@ resetBtn.onclick = () => {
 
   } catch (err) {
     console.error(err)
+    stopScanner()
     alert('เปิดกล้องไม่ได้')
   }
 }
-
 
 
 // ====================
