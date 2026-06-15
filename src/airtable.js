@@ -1,5 +1,5 @@
-const TOKEN = "";
-const BASE_ID = "appRarHKTSdp3giFz";
+const TOKEN = import.meta.env.VITE_AIRTABLE_TOKEN;
+const BASE_ID = import.meta.env.VITE_BASE_ID;
 const TABLE_NAME = "Serial Number List";
 
 export async function findBySerial(serial) {
